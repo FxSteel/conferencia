@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Escáner de Códigos QR</title>
+  <link rel="icon" type="image/png" href="favicon.png" />
+  <script src="https://unpkg.com/html5-qrcode"></script>
+  <style>
+    body {
+      margin: 0;
+      background-color: #f9fafb;
+      font-family: Arial, sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
+
+    .card {
+      background: white;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 2rem;
+      max-width: 400px;
+      width: 100%;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.04);
+      text-align: center;
+    }
+
+    .title {
+      font-size: 1.5rem;
+      font-weight: bold;
+      margin-bottom: 1.5rem;
+      color: #111827;
+    }
+
+    .description {
+      font-size: 0.9rem;
+      color: #6b7280;
+      margin-bottom: 1.5rem;
+    }
+
+    .icon {
+      color: #9ca3af;
+      margin-bottom: 1rem;
+    }
+
+    .button {
+      background-color: #111111;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      font-size: 1rem;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .camera-list {
+      text-align: left;
+      margin: 1rem 0;
+    }
+
+    .camera-option {
+      display: flex;
+      align-items: center;
+      margin-bottom: 0.5rem;
+    }
+
+    .camera-option input {
+      margin-right: 0.5rem;
+    }
+
+    .actions {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 1.5rem;
+    }
+
+    .secondary {
+      background-color: #f3f4f6;
+      color: #111827;
+    }
+
+    #reader {
+      width: 100%;
+      margin-top: 1rem;
+    }
+
+    .result {
+      margin-top: 1rem;
+      font-weight: bold;
+      color: green;
+      word-break: break-word;
+    }
+
+    .error {
+      color: red;
+    }
+
+    #btn-reescanear {
+      display: none;
+      margin-top: 1rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="card" id="main-card">
+    <h1 class="title">Escáner de Códigos QR</h1>
+    <div class="icon">
+      <svg xmlns="http://www.w3.org/2000/svg" width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-scan-icon">
+        <path d="M3 7V5a2 2 0 0 1 2-2h2"/>
+        <path d="M17 3h2a2 2 0 0 1 2 2v2"/>
+        <path d="M21 17v2a2 2 0 0 1-2 2h-2"/>
+        <path d="M7 21H5a2 2 0 0 1-2-2v-2"/>
+      </svg>
+    </div>
+    <p class="description">Toca el botón para seleccionar una cámara y escanear un código QR. Para mejores resultados, usa un dispositivo móvil.</p>
+
+    <div id="camera-selection" style="display:none">
+      <div class="camera-list" id="camera-list"></div>
+      <div class="actions">
+        <button class="button secondary" onclick="cancelSelection()">Cancelar</button>
+        <button class="button" onclick="startScanner()">Continuar</button>
+      </div>
+    </div>
+
+    <button id="select-button" class="button" onclick="showCameras()">Seleccionar Cámara</button>
+    <div id="reader" style="display:none"></div>
+    <div id="scan-result" class="result"></div>
+    <button id="btn-reescanear" class="button" onclick="reiniciarScanner()">Escanear otro QR</button>
+  </div>
+
+  <script>
+    let selectedCameraId = "";
+    let html5QrCode;
+
+    function showCameras() {
+      Html5Qrcode.getCameras().then(devices => {
+        if (devices.length === 0) {
+          alert("No se detectaron cámaras disponibles.");
+          return;
+        }
+
+        const list = document.getElementById("camera-list");
+        list.innerHTML = "";
+        devices.forEach((cam, i) => {
+          const option = document.createElement("div");
+          option.className = "camera-option";
+          option.innerHTML = `
+            <input type="radio" name="camera" value="${cam.id}" ${i === 0 ? "checked" : ""}>
+            <label>${cam.label || `Cámara ${i + 1}`}</label>
+          `;
+          list.appendChild(option);
+        });
+
+        document.getElementById("camera-selection").style.display = "block";
+        document.getElementById("select-button").style.display = "none";
+      });
+    }
+
+    function cancelSelection() {
+      document.getElementById("camera-selection").style.display = "none";
+      document.getElementById("select-button").style.display = "block";
+    }
+
+    function startScanner() {
+      document.getElementById("btn-reescanear").style.display = "none";
+      const radios = document.getElementsByName("camera");
+      radios.forEach(r => {
+        if (r.checked) selectedCameraId = r.value;
+      });
+
+      document.getElementById("camera-selection").style.display = "none";
+      document.getElementById("reader").style.display = "block";
+      document.getElementById("scan-result").textContent = "";
+
+      html5QrCode = new Html5Qrcode("reader");
+      html5QrCode.start(
+        selectedCameraId,
+        { fps: 10, qrbox: 250 },
+        onScanSuccess,
+        (errorMessage) => {
+          console.warn("Scan error:", errorMessage);
+        }
+      );
+    }
+
+    function onScanSuccess(decodedText) {
+      html5QrCode.stop().then(() => {
+        const resultElement = document.getElementById("scan-result");
+        const reScanButton = document.getElementById("btn-reescanear");
+
+        if (decodedText.startsWith("http")) {
+          resultElement.classList.remove("error");
+          resultElement.textContent = `✅ Escaneo completo y exitoso`;
+          reScanButton.style.display = "inline-block";
+        } else {
+          resultElement.textContent = "⚠️ El contenido del QR no es una URL válida.";
+          resultElement.classList.add("error");
+        }
+
+        // Enviar el webhook si es válido
+        if (decodedText.startsWith("http")) {
+          fetch(decodedText).catch(() => {
+            resultElement.textContent = `❌ Error al contactar al webhook`;
+            resultElement.classList.add("error");
+            reScanButton.style.display = "inline-block";
+          });
+        }
+      });
+    }
+
+    function reiniciarScanner() {
+      const resultElement = document.getElementById("scan-result");
+      const reScanButton = document.getElementById("btn-reescanear");
+
+      resultElement.textContent = "";
+      reScanButton.style.display = "none";
+      document.getElementById("reader").innerHTML = "";
+
+      html5QrCode = new Html5Qrcode("reader");
+      html5QrCode.start(
+        selectedCameraId,
+        { fps: 10, qrbox: 250 },
+        onScanSuccess,
+        (errorMessage) => {
+          console.warn("Scan error:", errorMessage);
+        }
+      );
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Conferencia Apostólica//Cumbre 2025//ES
+BEGIN:VEVENT
+UID:20250918T150000Z-conferencia@conferenciapostolica.com
+DTSTAMP:20250611T220000Z
+DTSTART:20250918T150000Z
+DTEND:20250920T200000Z
+SUMMARY:1ª Cumbre Apostólica - Santiago de Chile
+LOCATION:Hotel Sheraton Santiago – Sala San Cristóbal, Av. Santa María 1742, Providencia
+DESCRIPTION:Conferencia con Dr. Ben y Sonja Kleynhans. Presenta tu QR para ingresar. Entrada gratuita.
+ORGANIZER;CN=Conferencia Apostólica:mailto:organizacion@conferenciapostolica.com
+END:VEVENT
+END:VCALENDAR

@@ -195,21 +195,26 @@
           resultElement.classList.remove("error");
           resultElement.textContent = `✅ Escaneo completo y exitoso`;
           reScanButton.style.display = "inline-block";
+
+          try {
+            const url = new URL(decodedText);
+            url.searchParams.set("is_staff", "true");
+
+            console.log("Enviando a webhook:", url.toString());
+
+            fetch(url.toString()).catch(() => {
+              resultElement.textContent = `❌ Error al contactar al webhook`;
+              resultElement.classList.add("error");
+              reScanButton.style.display = "inline-block";
+            });
+          } catch (e) {
+            resultElement.textContent = `❌ URL inválida`;
+            resultElement.classList.add("error");
+            reScanButton.style.display = "inline-block";
+          }
         } else {
           resultElement.textContent = "⚠️ El contenido del QR no es una URL válida.";
           resultElement.classList.add("error");
-        }
-
-        // Enviar el webhook si es válido
-        if (decodedText.startsWith("http")) {
-          const url = new URL(decodedText);
-          url.searchParams.set("is_staff", "true");
-          
-          fetch(url.toString()).catch(() => {
-            resultElement.textContent = `❌ Error al contactar al webhook`;
-            resultElement.classList.add("error");
-            reScanButton.style.display = "inline-block";
-          });
         }
       });
     }

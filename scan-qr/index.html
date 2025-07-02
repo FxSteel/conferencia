@@ -202,7 +202,10 @@
 
         // Enviar el webhook si es válido
         if (decodedText.startsWith("http")) {
-          fetch(decodedText).catch(() => {
+          const url = new URL(decodedText);
+          url.searchParams.set("is_staff", "true");
+          
+          fetch(url.toString()).catch(() => {
             resultElement.textContent = `❌ Error al contactar al webhook`;
             resultElement.classList.add("error");
             reScanButton.style.display = "inline-block";
@@ -218,7 +221,6 @@
       resultElement.textContent = "";
       reScanButton.style.display = "none";
       document.getElementById("reader").innerHTML = "";
-
       html5QrCode = new Html5Qrcode("reader");
       html5QrCode.start(
         selectedCameraId,
